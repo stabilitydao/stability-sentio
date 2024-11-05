@@ -1,0 +1,55 @@
+enum UnderlyingType {
+    # real underlying that strategy use (LP token, ALM token, asset)
+    NATIVE
+    # single asset of strategy we use as underlying here
+    VIRTUAL_SINGLE
+    # the first of final strategy assets we use as underlying here
+    VIRTUAL_FIRST_ASSET
+}
+
+
+# Output column headers must match the following : chain_id, timestamp, creation_block_number, underlying_token_address, underlying_token_index, underlying_token_symbol, underlying_token_decimals, receipt_token_address, receipt_token_symbol, receipt_token_decimals, pool_address, pool_symbol
+
+type Pool @entity {
+    id: ID!
+
+    # Schema fields
+    chain_id: Int!
+    timestamp: Int!
+    creation_block_number: Int!
+    underlying_token_address: String!
+    underlying_token_index: Int!
+    underlying_token_symbol: String!
+    underlying_token_decimals: Int!
+    receipt_token_address: String!
+    receipt_token_symbol: String!
+    receipt_token_decimals: Int!
+    pool_address: String!
+    pool_symbol: String!
+
+    # helper fields
+    underlying_type: UnderlyingType!
+    strategy: String!
+    earned: Float!
+    earnedSnapshot: Float!
+}
+
+type Strategy @entity {
+    id: ID!
+
+    vault: String!
+}
+
+type VaultUser @entity {
+    "{user_address}-{vault_address}"
+    id: ID!
+    "{user_address}"
+    account: String!
+    "{vault_address}"
+    vault: String!
+
+    underlying_token_amount: Float!
+    underlying_token_amount_usd: Float!
+    earned: Float!
+    earnedSnapshot: Float!
+}
