@@ -8,7 +8,7 @@ import { BigDecimal } from '@sentio/bigdecimal'
 import { DatabaseSchema } from '@sentio/sdk'
 
 export enum UnderlyingType {
-  NATIVE = "NATIVE", VIRTUAL_SINGLE = "VIRTUAL_SINGLE", VIRTUAL_FIRST_ASSET = "VIRTUAL_FIRST_ASSET"
+  NATIVE = "NATIVE", VIRTUAL_SINGLE = "VIRTUAL_SINGLE", VIRTUAL_EACH_ASSET = "VIRTUAL_EACH_ASSET"
 }
 
 
@@ -116,6 +116,10 @@ export class VaultUser extends AbstractEntity  {
 	vault: String
 
 	@Required
+	@Column("Int")
+	underlying_token_index: Int
+
+	@Required
 	@Column("Float")
 	underlying_token_amount: Float
 
@@ -140,13 +144,14 @@ const source = `enum UnderlyingType {
     # single asset of strategy we use as underlying here
     VIRTUAL_SINGLE
     # the first of final strategy assets we use as underlying here
-    VIRTUAL_FIRST_ASSET
+    VIRTUAL_EACH_ASSET
 }
 
 
 # Output column headers must match the following : chain_id, timestamp, creation_block_number, underlying_token_address, underlying_token_index, underlying_token_symbol, underlying_token_decimals, receipt_token_address, receipt_token_symbol, receipt_token_decimals, pool_address, pool_symbol
 
 type Pool @entity {
+    "{vault_address}-{underlying_token_index}"
     id: ID!
 
     # Schema fields
@@ -177,12 +182,14 @@ type Strategy @entity {
 }
 
 type VaultUser @entity {
-    "{user_address}-{vault_address}"
+    "{user_address}-{vault_address}-{underlying_index}"
     id: ID!
     "{user_address}"
     account: String!
     "{vault_address}"
     vault: String!
+    "{underlying_index}"
+    underlying_token_index: Int!
 
     underlying_token_amount: Float!
     underlying_token_amount_usd: Float!
