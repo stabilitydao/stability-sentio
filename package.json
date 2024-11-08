@@ -2,7 +2,7 @@
   "private": true,
   "name": "stability-sentio",
   "license": "MIT",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "build": "sentio build",

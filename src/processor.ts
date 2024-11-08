@@ -155,7 +155,7 @@ const vaultTemplate = new VaultProcessorTemplate()
 
   })
   // regular snapshots
-  .onTimeInterval(snapshots, 60, 60)
+  .onTimeInterval(snapshots, 60 * 24, 60 * 24)
 
 // IStrategy contracts
 const strategyTemplate = new StrategyProcessorTemplate()
@@ -217,7 +217,7 @@ async function poolSnapshot(block: BlockParams, ctx: ContractContext<Vault, Vaul
 
   ctx.eventLogger.emit('poolSnapshot', {
     timestamp: block.timestamp,
-    block_date: Math.floor(block.timestamp / 3600) * 3600,
+    block_date: Math.floor(block.timestamp / 86400) * 86400,
     chain_id: ctx.chainId,
     underlying_token_address: pool.underlying_token_address,
     underlying_token_index: pool.underlying_token_index,
@@ -237,7 +237,7 @@ async function positionSnapshot(block: BlockParams, ctx: ContractContext<Vault, 
     }])) {
       ctx.eventLogger.emit('misc_depositors', {
         timestamp: block.timestamp,
-        block_date: Math.floor(block.timestamp / 3600) * 3600,
+        block_date: Math.floor(block.timestamp / 86400) * 86400,
         chain_id: ctx.chainId,
         pool_address: vault.pool_address,
         user_address: vaultUser.account,
