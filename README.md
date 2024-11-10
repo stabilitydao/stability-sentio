@@ -27,7 +27,7 @@ from
 
 ### Position Snapshot
 
-Thanks @0x76ADF1
+Thanks [@0x76ADF1](https://github.com/0x76ADF1)
 
 ```
 WITH
@@ -72,7 +72,7 @@ ORDER BY
 
 ### Pool Snapshot
 
-Thanks @0x76ADF1
+Thanks [@0x76ADF1](https://github.com/0x76ADF1)
 
 ```
 WITH
