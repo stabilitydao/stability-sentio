@@ -27,41 +27,90 @@ from
 
 ### Position Snapshot
 
+Thanks @0x76ADF1
+
 ```
-select
-  toUnixTimestamp (timestamp) as timestamp,
-  FROM_UNIXTIME(CAST(block_date as Int64)) as block_date,
-  chain_id,
-  pool_address,
-  user_address,
-  underlying_token_address,
-  underlying_token_index,
-  underlying_token_amount,
-  underlying_token_amount_usd,
-  total_fees_usd
-from
-  `misc_depositors`
-where
+WITH
+  dates AS (
+    SELECT
+      addDays (start_date, number) AS day
+    FROM
+      (
+        SELECT
+          toDate (min(timestamp)) AS start_date
+        FROM
+          `misc_depositors`
+      ) AS date_range ARRAY
+      JOIN range (dateDiff('day', start_date, toDate (now()))) AS number
+  )
+SELECT
+  toUnixTimestamp (coalesce(min(m.timestamp), toDateTime (d.day))) as timestamp,
+  toString (d.day) as block_date,
+  any (m.chain_id) as chain_id,
+  m.pool_address,
+  m.user_address,
+  m.underlying_token_address,
+  any (m.underlying_token_index) as underlying_token_index,
+  any (m.underlying_token_amount) as underlying_token_amount,
+  any (m.underlying_token_amount_usd) as underlying_token_amount_usd,
+  any (m.total_fees_usd) as total_fees_usd
+FROM
+  dates d
+  LEFT JOIN `misc_depositors` m ON toDate (m.timestamp) = d.day
+WHERE
+  d.day <= toDate (now())
+GROUP BY
+  d.day,
+  m.pool_address,
+  m.user_address,
+  m.underlying_token_address
+HAVING
   timestamp > timestamp('{{timestamp}}')
+ORDER BY
+  timestamp
 ```
 
 ### Pool Snapshot
 
+Thanks @0x76ADF1
+
 ```
-select
-  toUnixTimestamp (timestamp) as timestamp,
-  FROM_UNIXTIME(CAST(block_date as Int64)) as block_date,
-  chain_id,
-  underlying_token_address,
-  underlying_token_index,
-  pool_address,
-  underlying_token_amount,
-  underlying_token_amount_usd,
-  total_fees_usd
-from
-  `poolSnapshot`
-    where
+WITH
+  dates AS (
+    SELECT
+      addDays (start_date, number) AS day
+    FROM
+      (
+        SELECT
+          toDate (min(timestamp)) AS start_date
+        FROM
+          `poolSnapshot`
+      ) AS date_range ARRAY
+      JOIN range (dateDiff('day', start_date, toDate (now()))) AS number
+  )
+SELECT
+  toUnixTimestamp (coalesce(min(p.timestamp), toDateTime (d.day))) as timestamp,
+  toString (d.day) as block_date,
+  any (p.chain_id) as chain_id,
+  p.underlying_token_address,
+  any (p.underlying_token_index) as underlying_token_index,
+  p.pool_address,
+  any (p.underlying_token_amount) as underlying_token_amount,
+  any (p.underlying_token_amount_usd) as underlying_token_amount_usd,
+  any (p.total_fees_usd) as total_fees_usd
+FROM
+  dates d
+  LEFT JOIN `poolSnapshot` p ON toDate (p.timestamp) = d.day
+WHERE
+  d.day <= toDate (now())
+GROUP BY
+  d.day,
+  p.pool_address,
+  p.underlying_token_address
+HAVING
   timestamp > timestamp('{{timestamp}}')
+ORDER BY
+  timestamp
 ```
 
 ### Events
