@@ -52,15 +52,15 @@ const vaultTemplate = new VaultProcessorTemplate()
         id: event.args.account + '-' + event.address + '-0',
         vault: event.address,
         account: event.args.account,
-        earned: 0,
-        earnedSnapshot: 0,
-        underlying_token_amount: 0,
-        underlying_token_amount_usd: 0,
+        earned: BigDecimal(0),
+        earnedSnapshot: BigDecimal(0),
+        underlying_token_amount: BigDecimal(0),
+        underlying_token_amount_usd: BigDecimal(0),
         underlying_token_index: 0,
       })
     }
-    vault0User.underlying_token_amount = vault0UserUnderlyingTokenAmount.toNumber()
-    vault0User.underlying_token_amount_usd = vault0UserUnderlyingTokenAmountUsd.toNumber()
+    vault0User.underlying_token_amount = vault0UserUnderlyingTokenAmount
+    vault0User.underlying_token_amount_usd = vault0UserUnderlyingTokenAmountUsd
     await ctx.store.upsert(vault0User)
 
     if (vault0.underlying_type === UnderlyingType.VIRTUAL_EACH_ASSET) {
@@ -75,15 +75,15 @@ const vaultTemplate = new VaultProcessorTemplate()
           id: event.args.account + '-' + event.address + '-1',
           vault: event.address,
           account: event.args.account,
-          earned: 0,
-          earnedSnapshot: 0,
-          underlying_token_amount: 0,
-          underlying_token_amount_usd: 0,
+          earned: BigDecimal(0),
+          earnedSnapshot: BigDecimal(0),
+          underlying_token_amount: BigDecimal(0),
+          underlying_token_amount_usd: BigDecimal(0),
           underlying_token_index: 1,
         })
       }
-      vault1User.underlying_token_amount = vault1UserUnderlyingTokenAmount.toNumber()
-      vault1User.underlying_token_amount_usd = vault1UserUnderlyingTokenAmountUsd.toNumber()
+      vault1User.underlying_token_amount = vault1UserUnderlyingTokenAmount
+      vault1User.underlying_token_amount_usd = vault1UserUnderlyingTokenAmountUsd
       await ctx.store.upsert(vault1User)
 
       const vault0Prop = vault0UnderlyingUsd.div(vault0UnderlyingUsd.plus(vault1UnderlyingUsd))
@@ -147,8 +147,8 @@ const vaultTemplate = new VaultProcessorTemplate()
     const vault0UserUnderlyingTokenAmountUsd = userBalance.times(vault0UnderlyingUsd).div(totalSupply)
 
     const vault0User = await ctx.store.get(VaultUser, event.args.owner + '-' + event.address + '-0') as VaultUser
-    vault0User.underlying_token_amount = vault0UserUnderlyingTokenAmount.toNumber()
-    vault0User.underlying_token_amount_usd = vault0UserUnderlyingTokenAmountUsd.toNumber()
+    vault0User.underlying_token_amount = vault0UserUnderlyingTokenAmount
+    vault0User.underlying_token_amount_usd = vault0UserUnderlyingTokenAmountUsd
     await ctx.store.upsert(vault0User)
 
     if (vault0.underlying_type === UnderlyingType.VIRTUAL_EACH_ASSET) {
@@ -158,8 +158,8 @@ const vaultTemplate = new VaultProcessorTemplate()
       const vault1UserUnderlyingTokenAmountUsd = userBalance.times(vault1UnderlyingUsd).div(totalSupply)
 
       const vault1User = await ctx.store.get(VaultUser, event.args.owner + '-' + event.address + '-1') as VaultUser
-      vault1User.underlying_token_amount = vault1UserUnderlyingTokenAmount.toNumber()
-      vault1User.underlying_token_amount_usd = vault1UserUnderlyingTokenAmountUsd.toNumber()
+      vault1User.underlying_token_amount = vault1UserUnderlyingTokenAmount
+      vault1User.underlying_token_amount_usd = vault1UserUnderlyingTokenAmountUsd
       await ctx.store.upsert(vault1User)
 
       const vault0Prop = vault0UnderlyingUsd.div(vault0UnderlyingUsd.plus(vault1UnderlyingUsd))
@@ -232,17 +232,17 @@ const vaultTemplate = new VaultProcessorTemplate()
           id: event.args.to + '-' + event.address + '-0',
           vault: event.address,
           account: event.args.to,
-          earned: 0,
-          earnedSnapshot: 0,
-          underlying_token_amount: 0,
-          underlying_token_amount_usd: 0,
+          earned: BigDecimal(0),
+          earnedSnapshot: BigDecimal(0),
+          underlying_token_amount: BigDecimal(0),
+          underlying_token_amount_usd: BigDecimal(0),
           underlying_token_index: 0,
         })
       }
-      vault0UserFrom.underlying_token_amount = userBalanceFrom.times(vault0UnderlyingAmount).div(totalSupply).toNumber()
-      vault0UserFrom.underlying_token_amount_usd = userBalanceFrom.times(vault0UnderlyingUsd).div(totalSupply).toNumber()
-      vault0UserTo.underlying_token_amount = userBalanceTo.times(vault0UnderlyingAmount).div(totalSupply).toNumber()
-      vault0UserTo.underlying_token_amount_usd = userBalanceTo.times(vault0UnderlyingUsd).div(totalSupply).toNumber()
+      vault0UserFrom.underlying_token_amount = userBalanceFrom.times(vault0UnderlyingAmount).div(totalSupply)
+      vault0UserFrom.underlying_token_amount_usd = userBalanceFrom.times(vault0UnderlyingUsd).div(totalSupply)
+      vault0UserTo.underlying_token_amount = userBalanceTo.times(vault0UnderlyingAmount).div(totalSupply)
+      vault0UserTo.underlying_token_amount_usd = userBalanceTo.times(vault0UnderlyingUsd).div(totalSupply)
       await ctx.store.upsert(vault0UserFrom)
       await ctx.store.upsert(vault0UserTo)
 
@@ -257,17 +257,17 @@ const vaultTemplate = new VaultProcessorTemplate()
             id: event.args.to + '-' + event.address + '-1',
             vault: event.address,
             account: event.args.to,
-            earned: 0,
-            earnedSnapshot: 0,
-            underlying_token_amount: 0,
-            underlying_token_amount_usd: 0,
+            earned: BigDecimal(0),
+            earnedSnapshot: BigDecimal(0),
+            underlying_token_amount: BigDecimal(0),
+            underlying_token_amount_usd: BigDecimal(0),
             underlying_token_index: 1,
           })
         }
-        vault1UserFrom.underlying_token_amount = userBalanceFrom.times(vault1UnderlyingAmount).div(totalSupply).toNumber()
-        vault1UserFrom.underlying_token_amount_usd = userBalanceFrom.times(vault1UnderlyingUsd).div(totalSupply).toNumber()
-        vault1UserTo.underlying_token_amount = userBalanceTo.times(vault1UnderlyingAmount).div(totalSupply).toNumber()
-        vault1UserTo.underlying_token_amount_usd = userBalanceTo.times(vault1UnderlyingUsd).div(totalSupply).toNumber()
+        vault1UserFrom.underlying_token_amount = userBalanceFrom.times(vault1UnderlyingAmount).div(totalSupply)
+        vault1UserFrom.underlying_token_amount_usd = userBalanceFrom.times(vault1UnderlyingUsd).div(totalSupply)
+        vault1UserTo.underlying_token_amount = userBalanceTo.times(vault1UnderlyingAmount).div(totalSupply)
+        vault1UserTo.underlying_token_amount_usd = userBalanceTo.times(vault1UnderlyingUsd).div(totalSupply)
         await ctx.store.upsert(vault1UserFrom)
         await ctx.store.upsert(vault1UserTo)
 
@@ -339,7 +339,7 @@ const strategyTemplate = new StrategyProcessorTemplate()
       vault0Earned = scaleDown(event.args.earned, 18).times(vault0Prop)
       const vault1Earned = scaleDown(event.args.earned, 18).times(BigDecimal('1', 18).minus(vault0Prop))
 
-      vault1.earned += vault1Earned.toNumber()
+      vault1.earned = vault1.earned.plus(vault1Earned)
       await ctx.store.upsert(vault1)
 
       // add earned to all vault1 users
@@ -352,14 +352,14 @@ const strategyTemplate = new StrategyProcessorTemplate()
         op: "=",
         value: 1
       }])) {
-        vaultUser.earned += vaultUser.underlying_token_amount * vault1Earned.toNumber() / vault1UnderlyingAmount.toNumber()
+        vaultUser.earned = vaultUser.earned.plus(vaultUser.underlying_token_amount.times(vault1Earned).div(vault1UnderlyingAmount))
         await ctx.store.upsert(vaultUser)
       }
     } else {
       vault0Earned = scaleDown(event.args.earned, 18)
     }
 
-    vault0.earned += vault0Earned.toNumber()
+    vault0.earned = vault0.earned.plus(vault0Earned)
     await ctx.store.upsert(vault0)
 
     // add earned to all vault0 users
@@ -372,7 +372,7 @@ const strategyTemplate = new StrategyProcessorTemplate()
       op: "=",
       value: 0
     }])) {
-      vaultUser.earned += vaultUser.underlying_token_amount * vault0Earned.toNumber() / vault0UnderlyingAmount.toNumber()
+      vaultUser.earned = vaultUser.earned.plus(vaultUser.underlying_token_amount.times(vault0Earned).div(vault0UnderlyingAmount))
       await ctx.store.upsert(vaultUser)
     }
   })
@@ -387,7 +387,7 @@ async function poolSnapshot(block: BlockParams, ctx: ContractContext<Vault, Vaul
 
   const pool0 = await ctx.store.get(Pool, ctx.contract.address + '-0') as Pool
 
-  const pool0_total_fees_usd = pool0.earned - pool0.earnedSnapshot
+  const pool0_total_fees_usd = pool0.earned.minus(pool0.earnedSnapshot)
   pool0.earnedSnapshot = pool0.earned
   await ctx.store.upsert(pool0)
 
@@ -400,14 +400,17 @@ async function poolSnapshot(block: BlockParams, ctx: ContractContext<Vault, Vaul
     underlying_token_address: pool0.underlying_token_address,
     underlying_token_index: pool0.underlying_token_index,
     pool_address: pool0.pool_address,
-    underlying_token_amount: vault0UnderlyingAmount,
+    // cut to 12 decimals
+    underlying_token_amount: vault0UnderlyingAmount.toExponential(),
+    // for debug reasons
+    underlying_token_amount_str: vault0UnderlyingAmount.toFixed(18),
     underlying_token_amount_usd: vault0UnderlyingUsd,
     total_fees_usd: pool0_total_fees_usd,
   })
 
   if (pool0.underlying_type === UnderlyingType.VIRTUAL_EACH_ASSET) {
     const pool1 = await ctx.store.get(Pool, ctx.contract.address + '-1') as Pool
-    const pool1_total_fees_usd = pool1.earned - pool1.earnedSnapshot
+    const pool1_total_fees_usd = pool1.earned.minus(pool1.earnedSnapshot)
     pool1.earnedSnapshot = pool1.earned
     await ctx.store.upsert(pool1)
 
@@ -453,7 +456,7 @@ async function positionSnapshot(block: BlockParams, ctx: ContractContext<Vault, 
       underlying_token_index: vault0.underlying_token_index,
       underlying_token_amount: vaultUser.underlying_token_amount,
       underlying_token_amount_usd: vaultUser.underlying_token_amount_usd,
-      total_fees_usd: vaultUser.earned - vaultUser.earnedSnapshot,
+      total_fees_usd: vaultUser.earned.minus(vaultUser.earnedSnapshot),
     })
     vaultUser.earnedSnapshot = vaultUser.earned
     await ctx.store.upsert(vaultUser)
@@ -485,7 +488,7 @@ async function positionSnapshot(block: BlockParams, ctx: ContractContext<Vault, 
         underlying_token_index: vault1.underlying_token_index,
         underlying_token_amount: vaultUser.underlying_token_amount,
         underlying_token_amount_usd: vaultUser.underlying_token_amount_usd,
-        total_fees_usd: vaultUser.earned - vaultUser.earnedSnapshot,
+        total_fees_usd: vaultUser.earned.minus(vaultUser.earnedSnapshot),
       })
       vaultUser.earnedSnapshot = vaultUser.earned
       await ctx.store.upsert(vaultUser)
@@ -583,8 +586,8 @@ for (const chain in deployments) {
         // helper fields
         underlying_type: underlyingType,
         strategy: event.args.strategy,
-        earned: 0,
-        earnedSnapshot: 0,
+        earned: BigDecimal(0),
+        earnedSnapshot: BigDecimal(0),
       })
       await ctx.store.upsert(pool)
 
@@ -612,8 +615,8 @@ for (const chain in deployments) {
           // helper fields
           underlying_type: underlyingType,
           strategy: event.args.strategy,
-          earned: 0,
-          earnedSnapshot: 0,
+          earned: BigDecimal(0),
+          earnedSnapshot: BigDecimal(0),
         })
         await ctx.store.upsert(pool2)
       }

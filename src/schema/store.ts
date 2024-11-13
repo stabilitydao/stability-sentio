@@ -78,12 +78,12 @@ export class Pool extends AbstractEntity  {
 	strategy: String
 
 	@Required
-	@Column("Float")
-	earned: Float
+	@Column("BigDecimal")
+	earned: BigDecimal
 
 	@Required
-	@Column("Float")
-	earnedSnapshot: Float
+	@Column("BigDecimal")
+	earnedSnapshot: BigDecimal
   constructor(data: Partial<Pool>) {super()}
 }
 
@@ -120,20 +120,20 @@ export class VaultUser extends AbstractEntity  {
 	underlying_token_index: Int
 
 	@Required
-	@Column("Float")
-	underlying_token_amount: Float
+	@Column("BigDecimal")
+	underlying_token_amount: BigDecimal
 
 	@Required
-	@Column("Float")
-	underlying_token_amount_usd: Float
+	@Column("BigDecimal")
+	underlying_token_amount_usd: BigDecimal
 
 	@Required
-	@Column("Float")
-	earned: Float
+	@Column("BigDecimal")
+	earned: BigDecimal
 
 	@Required
-	@Column("Float")
-	earnedSnapshot: Float
+	@Column("BigDecimal")
+	earnedSnapshot: BigDecimal
   constructor(data: Partial<VaultUser>) {super()}
 }
 
@@ -171,8 +171,8 @@ type Pool @entity {
     # helper fields
     underlying_type: UnderlyingType!
     strategy: String!
-    earned: Float!
-    earnedSnapshot: Float!
+    earned: BigDecimal!
+    earnedSnapshot: BigDecimal!
 }
 
 type Strategy @entity {
@@ -191,10 +191,10 @@ type VaultUser @entity {
     "{underlying_index}"
     underlying_token_index: Int!
 
-    underlying_token_amount: Float!
-    underlying_token_amount_usd: Float!
-    earned: Float!
-    earnedSnapshot: Float!
+    underlying_token_amount: BigDecimal!
+    underlying_token_amount_usd: BigDecimal!
+    earned: BigDecimal!
+    earnedSnapshot: BigDecimal!
 }
 `
 DatabaseSchema.register({

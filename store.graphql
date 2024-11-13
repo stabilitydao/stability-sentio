@@ -31,8 +31,8 @@ type Pool @entity {
     # helper fields
     underlying_type: UnderlyingType!
     strategy: String!
-    earned: Float!
-    earnedSnapshot: Float!
+    earned: BigDecimal!
+    earnedSnapshot: BigDecimal!
 }
 
 type Strategy @entity {
@@ -51,8 +51,8 @@ type VaultUser @entity {
     "{underlying_index}"
     underlying_token_index: Int!
 
-    underlying_token_amount: Float!
-    underlying_token_amount_usd: Float!
-    earned: Float!
-    earnedSnapshot: Float!
+    underlying_token_amount: BigDecimal!
+    underlying_token_amount_usd: BigDecimal!
+    earned: BigDecimal!
+    earnedSnapshot: BigDecimal!
 }
