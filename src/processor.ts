@@ -400,12 +400,11 @@ async function poolSnapshot(block: BlockParams, ctx: ContractContext<Vault, Vaul
     underlying_token_address: pool0.underlying_token_address,
     underlying_token_index: pool0.underlying_token_index,
     pool_address: pool0.pool_address,
-    // cut to 12 decimals
-    underlying_token_amount: vault0UnderlyingAmount.toExponential(),
-    // for debug reasons
-    underlying_token_amount_str: vault0UnderlyingAmount.toFixed(18),
     underlying_token_amount_usd: vault0UnderlyingUsd,
     total_fees_usd: pool0_total_fees_usd,
+    // internal
+    underlying_token_amount_str: vault0UnderlyingAmount.toFixed(pool0.underlying_token_decimals),
+    underlying_token_decimals: pool0.underlying_token_decimals,
   })
 
   if (pool0.underlying_type === UnderlyingType.VIRTUAL_EACH_ASSET) {
@@ -423,9 +422,12 @@ async function poolSnapshot(block: BlockParams, ctx: ContractContext<Vault, Vaul
       underlying_token_address: pool1.underlying_token_address,
       underlying_token_index: pool1.underlying_token_index,
       pool_address: pool1.pool_address,
-      underlying_token_amount: vault1UnderlyingAmount,
+      // underlying_token_amount: vault1UnderlyingAmount,
       underlying_token_amount_usd: vault1UnderlyingUsd,
       total_fees_usd: pool1_total_fees_usd,
+      // internal
+      underlying_token_amount_str: vault0UnderlyingAmount.toFixed(pool0.underlying_token_decimals),
+      underlying_token_decimals: pool0.underlying_token_decimals,
     })
   }
 }
@@ -454,9 +456,12 @@ async function positionSnapshot(block: BlockParams, ctx: ContractContext<Vault, 
       user_address: vaultUser.account,
       underlying_token_address: vault0.underlying_token_address,
       underlying_token_index: vault0.underlying_token_index,
-      underlying_token_amount: vaultUser.underlying_token_amount,
+      // underlying_token_amount: vaultUser.underlying_token_amount,
       underlying_token_amount_usd: vaultUser.underlying_token_amount_usd,
       total_fees_usd: vaultUser.earned.minus(vaultUser.earnedSnapshot),
+      // internal
+      underlying_token_amount_str: vaultUser.underlying_token_amount.toFixed(vault0.underlying_token_decimals),
+      underlying_token_decimals: vault0.underlying_token_decimals,
     })
     vaultUser.earnedSnapshot = vaultUser.earned
     await ctx.store.upsert(vaultUser)
@@ -486,9 +491,12 @@ async function positionSnapshot(block: BlockParams, ctx: ContractContext<Vault, 
         user_address: vaultUser.account,
         underlying_token_address: vault1.underlying_token_address,
         underlying_token_index: vault1.underlying_token_index,
-        underlying_token_amount: vaultUser.underlying_token_amount,
+        // underlying_token_amount: vaultUser.underlying_token_amount,
         underlying_token_amount_usd: vaultUser.underlying_token_amount_usd,
         total_fees_usd: vaultUser.earned.minus(vaultUser.earnedSnapshot),
+        // internal
+        underlying_token_amount_str: vaultUser.underlying_token_amount.toFixed(vault1.underlying_token_decimals),
+        underlying_token_decimals: vault1.underlying_token_decimals,
       })
       vaultUser.earnedSnapshot = vaultUser.earned
       await ctx.store.upsert(vaultUser)

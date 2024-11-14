@@ -51,7 +51,7 @@ SELECT
   m.user_address,
   m.underlying_token_address,
   any (m.underlying_token_index) as underlying_token_index,
-  any (m.underlying_token_amount) as underlying_token_amount,
+  any (m.underlying_token_amount_str) as underlying_token_amount,
   any (m.underlying_token_amount_usd) as underlying_token_amount_usd,
   any (m.total_fees_usd) as total_fees_usd
 FROM
@@ -95,7 +95,7 @@ SELECT
   p.underlying_token_address,
   any (p.underlying_token_index) as underlying_token_index,
   p.pool_address,
-  any (p.underlying_token_amount) as underlying_token_amount,
+  any (p.underlying_token_amount_str) as underlying_token_amount,
   any (p.underlying_token_amount_usd) as underlying_token_amount_usd,
   any (p.total_fees_usd) as total_fees_usd
 FROM
