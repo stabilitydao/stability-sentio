@@ -2,7 +2,7 @@
   "private": true,
   "name": "stability-sentio",
   "license": "MIT",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "module",
   "scripts": {
     "build": "sentio build",
@@ -12,10 +12,10 @@
     "postinstall": "sentio gen"
   },
   "dependencies": {
-    "@sentio/sdk": "^2.44.3"
+    "@sentio/sdk": "^2.53.2"
   },
   "devDependencies": {
-    "@sentio/cli": "^2.21.6",
+    "@sentio/cli": "^2.23.3",
     "typescript": "^5.5.2"
   }
 }

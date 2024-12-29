@@ -13,9 +13,13 @@ const deployments: {[chainId in EthChainId]?: {
   factory: string,
   priceReader: string,
 }} = {
-  [EthChainId.POLYGON]: {
+  /*[EthChainId.POLYGON]: {
     factory: "0xa14EaAE76890595B3C7ea308dAEBB93863480EAD",
     priceReader: "0xcCef9C4459d73F9A997ff50AC34364555A3274Aa",
+  },*/
+  [EthChainId.SONIC_MAINNET]: {
+    factory: "0xc184a3ecca684f2621c903a7943d85fa42f56671",
+    priceReader: "0x422025182dd83a610bfa8b20550dcccdf94dc549",
   },
 }
 
