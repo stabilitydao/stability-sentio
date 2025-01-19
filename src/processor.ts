@@ -46,7 +46,7 @@ const vaultTemplate = new VaultProcessorTemplate()
     const mintAmount = scaleDown(event.args.mintAmount, 18)
 
     const vault0 = await ctx.store.get(Pool, event.address + '-0') as Pool
-    const [vault0UnderlyingAmount, vault0UnderlyingUsd] = await getVaultUnderlyingAmount(vault0, ctx.chainId, tvl[0])
+    const [vault0UnderlyingAmount, vault0UnderlyingUsd] = await getVaultUnderlyingAmount(vault0, ctx.chainId, tvl[0], event.blockNumber)
     const vault0UserUnderlyingTokenAmount = userBalance.times(vault0UnderlyingAmount).div(totalSupply)
     const vault0UserUnderlyingTokenAmountUsd = userBalance.times(vault0UnderlyingUsd).div(totalSupply)
 
@@ -69,7 +69,7 @@ const vaultTemplate = new VaultProcessorTemplate()
 
     if (vault0.underlying_type === UnderlyingType.VIRTUAL_EACH_ASSET) {
       const vault1 = await ctx.store.get(Pool, event.address + '-1') as Pool
-      const [vault1UnderlyingAmount, vault1UnderlyingUsd] = await getVaultUnderlyingAmount(vault1, ctx.chainId, tvl[0])
+      const [vault1UnderlyingAmount, vault1UnderlyingUsd] = await getVaultUnderlyingAmount(vault1, ctx.chainId, tvl[0], event.blockNumber)
       const vault1UserUnderlyingTokenAmount = userBalance.times(vault1UnderlyingAmount).div(totalSupply)
       const vault1UserUnderlyingTokenAmountUsd = userBalance.times(vault1UnderlyingUsd).div(totalSupply)
 
@@ -146,7 +146,7 @@ const vaultTemplate = new VaultProcessorTemplate()
     const userBalance = scaleDown(await ctx.contract.balanceOf(event.args.owner), 18)
 
     const vault0 = await ctx.store.get(Pool, event.address + '-0') as Pool
-    const [vault0UnderlyingAmount, vault0UnderlyingUsd] = await getVaultUnderlyingAmount(vault0, ctx.chainId, tvl[0])
+    const [vault0UnderlyingAmount, vault0UnderlyingUsd] = await getVaultUnderlyingAmount(vault0, ctx.chainId, tvl[0], event.blockNumber)
     const vault0UserUnderlyingTokenAmount = userBalance.times(vault0UnderlyingAmount).div(totalSupply)
     const vault0UserUnderlyingTokenAmountUsd = userBalance.times(vault0UnderlyingUsd).div(totalSupply)
 
@@ -157,7 +157,7 @@ const vaultTemplate = new VaultProcessorTemplate()
 
     if (vault0.underlying_type === UnderlyingType.VIRTUAL_EACH_ASSET) {
       const vault1 = await ctx.store.get(Pool, event.address + '-1') as Pool
-      const [vault1UnderlyingAmount, vault1UnderlyingUsd] = await getVaultUnderlyingAmount(vault1, ctx.chainId, tvl[0])
+      const [vault1UnderlyingAmount, vault1UnderlyingUsd] = await getVaultUnderlyingAmount(vault1, ctx.chainId, tvl[0], event.blockNumber)
       const vault1UserUnderlyingTokenAmount = userBalance.times(vault1UnderlyingAmount).div(totalSupply)
       const vault1UserUnderlyingTokenAmountUsd = userBalance.times(vault1UnderlyingUsd).div(totalSupply)
 
@@ -227,7 +227,7 @@ const vaultTemplate = new VaultProcessorTemplate()
       const userBalanceTo = scaleDown(await ctx.contract.balanceOf(event.args.to), 18)
 
       const vault0 = await ctx.store.get(Pool, event.address + '-0') as Pool
-      const [vault0UnderlyingAmount, vault0UnderlyingUsd] = await getVaultUnderlyingAmount(vault0, ctx.chainId, tvl[0])
+      const [vault0UnderlyingAmount, vault0UnderlyingUsd] = await getVaultUnderlyingAmount(vault0, ctx.chainId, tvl[0], event.blockNumber)
 
       const vault0UserFrom = await ctx.store.get(VaultUser, event.args.from + '-' + event.address + '-0') as VaultUser
       let vault0UserTo = await ctx.store.get(VaultUser, event.args.to + '-' + event.address + '-0')
@@ -252,7 +252,7 @@ const vaultTemplate = new VaultProcessorTemplate()
 
       if (vault0.underlying_type === UnderlyingType.VIRTUAL_EACH_ASSET) {
         const vault1 = await ctx.store.get(Pool, event.address + '-1') as Pool
-        const [vault1UnderlyingAmount, vault1UnderlyingUsd] = await getVaultUnderlyingAmount(vault1, ctx.chainId, tvl[0])
+        const [vault1UnderlyingAmount, vault1UnderlyingUsd] = await getVaultUnderlyingAmount(vault1, ctx.chainId, tvl[0], event.blockNumber)
 
         const vault1UserFrom = await ctx.store.get(VaultUser, event.args.from + '-' + event.address + '-1') as VaultUser
         let vault1UserTo = await ctx.store.get(VaultUser, event.args.to + '-' + event.address + '-1')
@@ -331,14 +331,14 @@ const strategyTemplate = new StrategyProcessorTemplate()
   .onEventHardWork(async (event, ctx) => {
 
     const strategy = await ctx.store.get(Strategy, event.address) as Strategy
-    const tvl = await getVaultContract(ctx.chainId, strategy.vault).tvl()
+    const tvl = await getVaultContract(ctx.chainId, strategy.vault).tvl({blockTag: event.blockNumber,})
 
     const vault0 = await ctx.store.get(Pool, strategy.vault + '-0') as Pool
-    const [vault0UnderlyingAmount, vault0UnderlyingUsd] = await getVaultUnderlyingAmount(vault0, ctx.chainId, tvl[0])
+    const [vault0UnderlyingAmount, vault0UnderlyingUsd] = await getVaultUnderlyingAmount(vault0, ctx.chainId, tvl[0], event.blockNumber)
     let vault0Earned: BigDecimal
     if (vault0.underlying_type === UnderlyingType.VIRTUAL_EACH_ASSET) {
       const vault1 = await ctx.store.get(Pool, strategy.vault + '-1') as Pool
-      const [vault1UnderlyingAmount, vault1UnderlyingUsd] = await getVaultUnderlyingAmount(vault1, ctx.chainId, tvl[0])
+      const [vault1UnderlyingAmount, vault1UnderlyingUsd] = await getVaultUnderlyingAmount(vault1, ctx.chainId, tvl[0], event.blockNumber)
       const vault0Prop = vault0UnderlyingUsd.div(vault0UnderlyingUsd.plus(vault1UnderlyingUsd))
       vault0Earned = scaleDown(event.args.earned, 18).times(vault0Prop)
       const vault1Earned = scaleDown(event.args.earned, 18).times(BigDecimal('1', 18).minus(vault0Prop))
@@ -395,7 +395,7 @@ async function poolSnapshot(block: BlockParams, ctx: ContractContext<Vault, Vaul
   pool0.earnedSnapshot = pool0.earned
   await ctx.store.upsert(pool0)
 
-  const [vault0UnderlyingAmount, vault0UnderlyingUsd] = await getVaultUnderlyingAmount(pool0, ctx.chainId, tvl[0])
+  const [vault0UnderlyingAmount, vault0UnderlyingUsd] = await getVaultUnderlyingAmount(pool0, ctx.chainId, tvl[0], block.number)
 
   ctx.eventLogger.emit('poolSnapshot', {
     timestamp: block.timestamp,
@@ -417,7 +417,7 @@ async function poolSnapshot(block: BlockParams, ctx: ContractContext<Vault, Vaul
     pool1.earnedSnapshot = pool1.earned
     await ctx.store.upsert(pool1)
 
-    const [vault1UnderlyingAmount, vault1UnderlyingUsd] = await getVaultUnderlyingAmount(pool1, ctx.chainId, tvl[0])
+    const [vault1UnderlyingAmount, vault1UnderlyingUsd] = await getVaultUnderlyingAmount(pool1, ctx.chainId, tvl[0], block.number)
 
     ctx.eventLogger.emit('poolSnapshot', {
       timestamp: block.timestamp,
@@ -508,15 +508,15 @@ async function positionSnapshot(block: BlockParams, ctx: ContractContext<Vault, 
   }
 }
 
-async function getVaultUnderlyingAmount(pool: Pool, chainId: EthChainId, vaultTvl: bigint): Promise<BigDecimal[]> {
+async function getVaultUnderlyingAmount(pool: Pool, chainId: EthChainId, vaultTvl: bigint, blockNumber: number): Promise<BigDecimal[]> {
   const strategyContract = getStrategyContract(chainId, pool.strategy)
   if (pool.underlying_type === UnderlyingType.NATIVE) {
     return [
-      scaleDown(await strategyContract.total(), pool.underlying_token_decimals),
+      scaleDown(await strategyContract.total({blockTag: blockNumber,}), pool.underlying_token_decimals),
       scaleDown(vaultTvl, 18),
     ]
   } else if (pool.underlying_type === UnderlyingType.VIRTUAL_SINGLE) {
-    const [,assetsAmounts] = await strategyContract.assetsAmounts()
+    const [,assetsAmounts] = await strategyContract.assetsAmounts({blockTag: blockNumber,})
     return [
       scaleDown(assetsAmounts[0], pool.underlying_token_decimals),
       scaleDown(vaultTvl, 18),
@@ -524,13 +524,13 @@ async function getVaultUnderlyingAmount(pool: Pool, chainId: EthChainId, vaultTv
   }
 
   // CLMM vault
-  const [,assetsAmounts] = await strategyContract.assetsAmounts()
+  const [,assetsAmounts] = await strategyContract.assetsAmounts({blockTag: blockNumber,})
   const underlyingAmount = scaleDown(assetsAmounts[pool.underlying_token_index], pool.underlying_token_decimals)
   const priceReaderContract = getPriceReaderContract(chainId, (deployments[chainId] as {
     factory: string,
     priceReader: string,
   }).priceReader)
-  const priceReaderPrice = await priceReaderContract.getPrice(pool.underlying_token_address)
+  const priceReaderPrice = await priceReaderContract.getPrice(pool.underlying_token_address, {blockTag: blockNumber,})
   const uPrice = scaleDown(priceReaderPrice[0], 18)
   return [underlyingAmount, underlyingAmount.times(uPrice)]
 }
@@ -556,7 +556,7 @@ for (const chain in deployments) {
 
       // assignment underlying
       const strategyContract = getStrategyContract(ctx.chainId, event.args.strategy)
-      let underlying0 = await strategyContract.underlying()
+      let underlying0 = await strategyContract.underlying({blockTag: event.blockNumber,})
       let underlyingType = UnderlyingType.NATIVE
       if (underlying0 === "0x0000000000000000000000000000000000000000") {
         if (event.args.assets.length === 1) {
