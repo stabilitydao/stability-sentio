@@ -390,120 +390,125 @@ async function poolSnapshot(block: BlockParams, ctx: ContractContext<Vault, Vaul
   const tvl = await ctx.contract.tvl()
 
   const pool0 = await ctx.store.get(Pool, ctx.contract.address + '-0') as Pool
+  if (pool0) {
+    const pool0_total_fees_usd = pool0.earned.minus(pool0.earnedSnapshot)
+    pool0.earnedSnapshot = pool0.earned
+    await ctx.store.upsert(pool0)
 
-  const pool0_total_fees_usd = pool0.earned.minus(pool0.earnedSnapshot)
-  pool0.earnedSnapshot = pool0.earned
-  await ctx.store.upsert(pool0)
-
-  const [vault0UnderlyingAmount, vault0UnderlyingUsd] = await getVaultUnderlyingAmount(pool0, ctx.chainId, tvl[0], block.number)
-
-  ctx.eventLogger.emit('poolSnapshot', {
-    timestamp: block.timestamp,
-    block_date: Math.floor(block.timestamp / 86400) * 86400,
-    chain_id: ctx.chainId,
-    underlying_token_address: pool0.underlying_token_address,
-    underlying_token_index: pool0.underlying_token_index,
-    pool_address: pool0.pool_address,
-    underlying_token_amount_usd: vault0UnderlyingUsd,
-    total_fees_usd: pool0_total_fees_usd,
-    // internal
-    underlying_token_amount_str: vault0UnderlyingAmount.toFixed(pool0.underlying_token_decimals),
-    underlying_token_decimals: pool0.underlying_token_decimals,
-  })
-
-  if (pool0.underlying_type === UnderlyingType.VIRTUAL_EACH_ASSET) {
-    const pool1 = await ctx.store.get(Pool, ctx.contract.address + '-1') as Pool
-    const pool1_total_fees_usd = pool1.earned.minus(pool1.earnedSnapshot)
-    pool1.earnedSnapshot = pool1.earned
-    await ctx.store.upsert(pool1)
-
-    const [vault1UnderlyingAmount, vault1UnderlyingUsd] = await getVaultUnderlyingAmount(pool1, ctx.chainId, tvl[0], block.number)
+    const [vault0UnderlyingAmount, vault0UnderlyingUsd] = await getVaultUnderlyingAmount(pool0, ctx.chainId, tvl[0], block.number)
 
     ctx.eventLogger.emit('poolSnapshot', {
       timestamp: block.timestamp,
       block_date: Math.floor(block.timestamp / 86400) * 86400,
       chain_id: ctx.chainId,
-      underlying_token_address: pool1.underlying_token_address,
-      underlying_token_index: pool1.underlying_token_index,
-      pool_address: pool1.pool_address,
-      // underlying_token_amount: vault1UnderlyingAmount,
-      underlying_token_amount_usd: vault1UnderlyingUsd,
-      total_fees_usd: pool1_total_fees_usd,
+      underlying_token_address: pool0.underlying_token_address,
+      underlying_token_index: pool0.underlying_token_index,
+      pool_address: pool0.pool_address,
+      underlying_token_amount_usd: vault0UnderlyingUsd,
+      total_fees_usd: pool0_total_fees_usd,
       // internal
       underlying_token_amount_str: vault0UnderlyingAmount.toFixed(pool0.underlying_token_decimals),
       underlying_token_decimals: pool0.underlying_token_decimals,
     })
+
+    if (pool0.underlying_type === UnderlyingType.VIRTUAL_EACH_ASSET) {
+      const pool1 = await ctx.store.get(Pool, ctx.contract.address + '-1') as Pool
+      const pool1_total_fees_usd = pool1.earned.minus(pool1.earnedSnapshot)
+      pool1.earnedSnapshot = pool1.earned
+      await ctx.store.upsert(pool1)
+
+      const [vault1UnderlyingAmount, vault1UnderlyingUsd] = await getVaultUnderlyingAmount(pool1, ctx.chainId, tvl[0], block.number)
+
+      ctx.eventLogger.emit('poolSnapshot', {
+        timestamp: block.timestamp,
+        block_date: Math.floor(block.timestamp / 86400) * 86400,
+        chain_id: ctx.chainId,
+        underlying_token_address: pool1.underlying_token_address,
+        underlying_token_index: pool1.underlying_token_index,
+        pool_address: pool1.pool_address,
+        // underlying_token_amount: vault1UnderlyingAmount,
+        underlying_token_amount_usd: vault1UnderlyingUsd,
+        total_fees_usd: pool1_total_fees_usd,
+        // internal
+        underlying_token_amount_str: vault0UnderlyingAmount.toFixed(pool0.underlying_token_decimals),
+        underlying_token_decimals: pool0.underlying_token_decimals,
+      })
+    }
   }
+
+
 }
 
 async function positionSnapshot(block: BlockParams, ctx: ContractContext<Vault, VaultBoundContractView>) {
   const vault0 = await ctx.store.get(Pool, ctx.contract.address + '-0') as Pool
-  const vault0Users: {[id:string]: VaultUser} = {}
-  for await (const vaultUser of ctx.store.listIterator(VaultUser, [{
-    field: "vault",
-    op: "=",
-    value: vault0.pool_address
-  }, {
-    field: "underlying_token_index",
-    op: "=",
-    value: vault0.underlying_token_index,
-  }])) {
-    vault0Users[vaultUser.id.toString()] = vaultUser
-  }
-  for (const vaultUserId in vault0Users) {
-    const vaultUser = vault0Users[vaultUserId]
-    ctx.eventLogger.emit('misc_depositors', {
-      timestamp: block.timestamp,
-      block_date: Math.floor(block.timestamp / 86400) * 86400,
-      chain_id: ctx.chainId,
-      pool_address: vault0.pool_address,
-      user_address: vaultUser.account,
-      underlying_token_address: vault0.underlying_token_address,
-      underlying_token_index: vault0.underlying_token_index,
-      // underlying_token_amount: vaultUser.underlying_token_amount,
-      underlying_token_amount_usd: vaultUser.underlying_token_amount_usd,
-      total_fees_usd: vaultUser.earned.minus(vaultUser.earnedSnapshot),
-      // internal
-      underlying_token_amount_str: vaultUser.underlying_token_amount.toFixed(vault0.underlying_token_decimals),
-      underlying_token_decimals: vault0.underlying_token_decimals,
-    })
-    vaultUser.earnedSnapshot = vaultUser.earned
-    await ctx.store.upsert(vaultUser)
-  }
-
-  if (vault0.underlying_type === UnderlyingType.VIRTUAL_EACH_ASSET) {
-    const vault1 = await ctx.store.get(Pool, ctx.contract.address + '-1') as Pool
-    const vault1Users: {[id:string]: VaultUser} = {}
+  if (vault0) {
+    const vault0Users: {[id:string]: VaultUser} = {}
     for await (const vaultUser of ctx.store.listIterator(VaultUser, [{
       field: "vault",
       op: "=",
-      value: vault1.pool_address
+      value: vault0.pool_address
     }, {
       field: "underlying_token_index",
       op: "=",
-      value: vault1.underlying_token_index,
+      value: vault0.underlying_token_index,
     }])) {
-      vault1Users[vaultUser.id.toString()] = vaultUser
+      vault0Users[vaultUser.id.toString()] = vaultUser
     }
-    for (const vaultUserId in vault1Users) {
-      const vaultUser = vault1Users[vaultUserId]
+    for (const vaultUserId in vault0Users) {
+      const vaultUser = vault0Users[vaultUserId]
       ctx.eventLogger.emit('misc_depositors', {
         timestamp: block.timestamp,
         block_date: Math.floor(block.timestamp / 86400) * 86400,
         chain_id: ctx.chainId,
-        pool_address: vault1.pool_address,
+        pool_address: vault0.pool_address,
         user_address: vaultUser.account,
-        underlying_token_address: vault1.underlying_token_address,
-        underlying_token_index: vault1.underlying_token_index,
+        underlying_token_address: vault0.underlying_token_address,
+        underlying_token_index: vault0.underlying_token_index,
         // underlying_token_amount: vaultUser.underlying_token_amount,
         underlying_token_amount_usd: vaultUser.underlying_token_amount_usd,
         total_fees_usd: vaultUser.earned.minus(vaultUser.earnedSnapshot),
         // internal
-        underlying_token_amount_str: vaultUser.underlying_token_amount.toFixed(vault1.underlying_token_decimals),
-        underlying_token_decimals: vault1.underlying_token_decimals,
+        underlying_token_amount_str: vaultUser.underlying_token_amount.toFixed(vault0.underlying_token_decimals),
+        underlying_token_decimals: vault0.underlying_token_decimals,
       })
       vaultUser.earnedSnapshot = vaultUser.earned
       await ctx.store.upsert(vaultUser)
+    }
+
+    if (vault0.underlying_type === UnderlyingType.VIRTUAL_EACH_ASSET) {
+      const vault1 = await ctx.store.get(Pool, ctx.contract.address + '-1') as Pool
+      const vault1Users: {[id:string]: VaultUser} = {}
+      for await (const vaultUser of ctx.store.listIterator(VaultUser, [{
+        field: "vault",
+        op: "=",
+        value: vault1.pool_address
+      }, {
+        field: "underlying_token_index",
+        op: "=",
+        value: vault1.underlying_token_index,
+      }])) {
+        vault1Users[vaultUser.id.toString()] = vaultUser
+      }
+      for (const vaultUserId in vault1Users) {
+        const vaultUser = vault1Users[vaultUserId]
+        ctx.eventLogger.emit('misc_depositors', {
+          timestamp: block.timestamp,
+          block_date: Math.floor(block.timestamp / 86400) * 86400,
+          chain_id: ctx.chainId,
+          pool_address: vault1.pool_address,
+          user_address: vaultUser.account,
+          underlying_token_address: vault1.underlying_token_address,
+          underlying_token_index: vault1.underlying_token_index,
+          // underlying_token_amount: vaultUser.underlying_token_amount,
+          underlying_token_amount_usd: vaultUser.underlying_token_amount_usd,
+          total_fees_usd: vaultUser.earned.minus(vaultUser.earnedSnapshot),
+          // internal
+          underlying_token_amount_str: vaultUser.underlying_token_amount.toFixed(vault1.underlying_token_decimals),
+          underlying_token_decimals: vault1.underlying_token_decimals,
+        })
+        vaultUser.earnedSnapshot = vaultUser.earned
+        await ctx.store.upsert(vaultUser)
+      }
     }
   }
 }
