@@ -434,8 +434,9 @@ async function poolSnapshot(block: BlockParams, ctx: ContractContext<Vault, Vaul
         underlying_token_decimals: pool0.underlying_token_decimals,
       })
     }
+  } else {
+    console.log(`Cant get pool with id ${ctx.contract.address + '-0'}`)
   }
-
 
 }
 
@@ -510,6 +511,8 @@ async function positionSnapshot(block: BlockParams, ctx: ContractContext<Vault, 
         await ctx.store.upsert(vaultUser)
       }
     }
+  } else {
+    console.log(`Cant get pool with id ${ctx.contract.address + '-0'}`)
   }
 }
 
