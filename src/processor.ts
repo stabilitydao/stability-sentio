@@ -50,10 +50,10 @@ const vaultTemplate = new VaultProcessorTemplate()
     const vault0UserUnderlyingTokenAmount = userBalance.times(vault0UnderlyingAmount).div(totalSupply)
     const vault0UserUnderlyingTokenAmountUsd = userBalance.times(vault0UnderlyingUsd).div(totalSupply)
 
-    let vault0User = await ctx.store.get(VaultUser, event.args.account + '-' + event.address + '-0')
+    let vault0User = await ctx.store.get(VaultUser, event.args.account.toLowerCase() + '-' + event.address.toLowerCase() + '-0')
     if (!vault0User) {
       vault0User = new VaultUser({
-        id: event.args.account + '-' + event.address + '-0',
+        id: event.args.account.toLowerCase() + '-' + event.address.toLowerCase() + '-0',
         vault: event.address,
         account: event.args.account,
         earned: BigDecimal(0),
@@ -73,10 +73,10 @@ const vaultTemplate = new VaultProcessorTemplate()
       const vault1UserUnderlyingTokenAmount = userBalance.times(vault1UnderlyingAmount).div(totalSupply)
       const vault1UserUnderlyingTokenAmountUsd = userBalance.times(vault1UnderlyingUsd).div(totalSupply)
 
-      let vault1User = await ctx.store.get(VaultUser, event.args.account + '-' + event.address + '-1')
+      let vault1User = await ctx.store.get(VaultUser, event.args.account.toLowerCase() + '-' + event.address.toLowerCase() + '-1')
       if (!vault1User) {
         vault1User = new VaultUser({
-          id: event.args.account + '-' + event.address + '-1',
+          id: event.args.account.toLowerCase() + '-' + event.address.toLowerCase() + '-1',
           vault: event.address,
           account: event.args.account,
           earned: BigDecimal(0),
@@ -150,7 +150,7 @@ const vaultTemplate = new VaultProcessorTemplate()
     const vault0UserUnderlyingTokenAmount = userBalance.times(vault0UnderlyingAmount).div(totalSupply)
     const vault0UserUnderlyingTokenAmountUsd = userBalance.times(vault0UnderlyingUsd).div(totalSupply)
 
-    const vault0User = await ctx.store.get(VaultUser, event.args.owner + '-' + event.address + '-0') as VaultUser
+    const vault0User = await ctx.store.get(VaultUser, event.args.owner.toLowerCase() + '-' + event.address.toLowerCase() + '-0') as VaultUser
     vault0User.underlying_token_amount = vault0UserUnderlyingTokenAmount
     vault0User.underlying_token_amount_usd = vault0UserUnderlyingTokenAmountUsd
     await ctx.store.upsert(vault0User)
@@ -161,7 +161,7 @@ const vaultTemplate = new VaultProcessorTemplate()
       const vault1UserUnderlyingTokenAmount = userBalance.times(vault1UnderlyingAmount).div(totalSupply)
       const vault1UserUnderlyingTokenAmountUsd = userBalance.times(vault1UnderlyingUsd).div(totalSupply)
 
-      const vault1User = await ctx.store.get(VaultUser, event.args.owner + '-' + event.address + '-1') as VaultUser
+      const vault1User = await ctx.store.get(VaultUser, event.args.owner.toLowerCase() + '-' + event.address.toLowerCase() + '-1') as VaultUser
       vault1User.underlying_token_amount = vault1UserUnderlyingTokenAmount
       vault1User.underlying_token_amount_usd = vault1UserUnderlyingTokenAmountUsd
       await ctx.store.upsert(vault1User)
@@ -229,97 +229,100 @@ const vaultTemplate = new VaultProcessorTemplate()
       const vault0 = await ctx.store.get(Pool, event.address.toLowerCase() + '-0') as Pool
       const [vault0UnderlyingAmount, vault0UnderlyingUsd] = await getVaultUnderlyingAmount(vault0, ctx.chainId, tvl[0], event.blockNumber)
 
-      const vault0UserFrom = await ctx.store.get(VaultUser, event.args.from + '-' + event.address + '-0') as VaultUser
-      let vault0UserTo = await ctx.store.get(VaultUser, event.args.to + '-' + event.address + '-0')
-      if (!vault0UserTo) {
-        vault0UserTo = new VaultUser({
-          id: event.args.to + '-' + event.address + '-0',
-          vault: event.address,
-          account: event.args.to,
-          earned: BigDecimal(0),
-          earnedSnapshot: BigDecimal(0),
-          underlying_token_amount: BigDecimal(0),
-          underlying_token_amount_usd: BigDecimal(0),
-          underlying_token_index: 0,
-        })
-      }
-      vault0UserFrom.underlying_token_amount = userBalanceFrom.times(vault0UnderlyingAmount).div(totalSupply)
-      vault0UserFrom.underlying_token_amount_usd = userBalanceFrom.times(vault0UnderlyingUsd).div(totalSupply)
-      vault0UserTo.underlying_token_amount = userBalanceTo.times(vault0UnderlyingAmount).div(totalSupply)
-      vault0UserTo.underlying_token_amount_usd = userBalanceTo.times(vault0UnderlyingUsd).div(totalSupply)
-      await ctx.store.upsert(vault0UserFrom)
-      await ctx.store.upsert(vault0UserTo)
-
-      if (vault0.underlying_type === UnderlyingType.VIRTUAL_EACH_ASSET) {
-        const vault1 = await ctx.store.get(Pool, event.address.toLowerCase() + '-1') as Pool
-        const [vault1UnderlyingAmount, vault1UnderlyingUsd] = await getVaultUnderlyingAmount(vault1, ctx.chainId, tvl[0], event.blockNumber)
-
-        const vault1UserFrom = await ctx.store.get(VaultUser, event.args.from + '-' + event.address + '-1') as VaultUser
-        let vault1UserTo = await ctx.store.get(VaultUser, event.args.to + '-' + event.address + '-1')
-        if (!vault1UserTo) {
-          vault1UserTo = new VaultUser({
-            id: event.args.to + '-' + event.address + '-1',
+      const vault0UserFrom = await ctx.store.get(VaultUser, event.args.from.toLowerCase() + '-' + event.address.toLowerCase() + '-0') as VaultUser
+      if (vault0UserFrom) {
+        let vault0UserTo = await ctx.store.get(VaultUser, event.args.to.toLowerCase() + '-' + event.address.toLowerCase() + '-0')
+        if (!vault0UserTo) {
+          vault0UserTo = new VaultUser({
+            id: event.args.to.toLowerCase() + '-' + event.address.toLowerCase() + '-0',
             vault: event.address,
             account: event.args.to,
             earned: BigDecimal(0),
             earnedSnapshot: BigDecimal(0),
             underlying_token_amount: BigDecimal(0),
             underlying_token_amount_usd: BigDecimal(0),
-            underlying_token_index: 1,
+            underlying_token_index: 0,
           })
         }
-        vault1UserFrom.underlying_token_amount = userBalanceFrom.times(vault1UnderlyingAmount).div(totalSupply)
-        vault1UserFrom.underlying_token_amount_usd = userBalanceFrom.times(vault1UnderlyingUsd).div(totalSupply)
-        vault1UserTo.underlying_token_amount = userBalanceTo.times(vault1UnderlyingAmount).div(totalSupply)
-        vault1UserTo.underlying_token_amount_usd = userBalanceTo.times(vault1UnderlyingUsd).div(totalSupply)
-        await ctx.store.upsert(vault1UserFrom)
-        await ctx.store.upsert(vault1UserTo)
+        vault0UserFrom.underlying_token_amount = userBalanceFrom.times(vault0UnderlyingAmount).div(totalSupply)
+        vault0UserFrom.underlying_token_amount_usd = userBalanceFrom.times(vault0UnderlyingUsd).div(totalSupply)
+        vault0UserTo.underlying_token_amount = userBalanceTo.times(vault0UnderlyingAmount).div(totalSupply)
+        vault0UserTo.underlying_token_amount_usd = userBalanceTo.times(vault0UnderlyingUsd).div(totalSupply)
+        await ctx.store.upsert(vault0UserFrom)
+        await ctx.store.upsert(vault0UserTo)
 
-        const vault0Prop = vault0UnderlyingUsd.div(vault0UnderlyingUsd.plus(vault1UnderlyingUsd))
-        ctx.eventLogger.emit('misc_events', {
-          timestamp: Math.floor(ctx.timestamp.getTime() / 1000),
-          chain_id: ctx.chainId,
-          block_number: event.blockNumber,
-          log_index: event.index,
-          transaction_hash: event.transactionHash,
-          user_address: event.args.from,
-          taker_address: event.args.to,
-          pool_address: vault0.pool_address,
-          underlying_token_address: vault0.underlying_token_address,
-          amount: transferAmount.times(vault0Prop),
-          amount_usd: transferAmount.times(scaleDown(tvl[0], 18)).div(totalSupply).times(vault0Prop),
-          event_type: 'transfer',
-        })
-        ctx.eventLogger.emit('misc_events', {
-          timestamp: Math.floor(ctx.timestamp.getTime() / 1000),
-          chain_id: ctx.chainId,
-          block_number: event.blockNumber,
-          log_index: event.index,
-          transaction_hash: event.transactionHash,
-          user_address: event.args.from,
-          taker_address: event.args.to,
-          pool_address: vault1.pool_address,
-          underlying_token_address: vault1.underlying_token_address,
-          amount: transferAmount.times(BigDecimal('1', 18).minus(vault0Prop)),
-          amount_usd: transferAmount.times(scaleDown(tvl[0], 18)).div(totalSupply).times(BigDecimal('1', 18).minus(vault0Prop)),
-          event_type: 'transfer',
-        })
-      } else {
-        ctx.eventLogger.emit('misc_events', {
-          timestamp: Math.floor(ctx.timestamp.getTime() / 1000),
-          chain_id: ctx.chainId,
-          block_number: event.blockNumber,
-          log_index: event.index,
-          transaction_hash: event.transactionHash,
-          user_address: event.args.from,
-          taker_address: event.args.to,
-          pool_address: vault0.pool_address,
-          underlying_token_address: vault0.underlying_token_address,
-          amount: transferAmount,
-          amount_usd: transferAmount.times(scaleDown(tvl[0], 18)).div(totalSupply),
-          event_type: 'transfer',
-        })
+        if (vault0.underlying_type === UnderlyingType.VIRTUAL_EACH_ASSET) {
+          const vault1 = await ctx.store.get(Pool, event.address.toLowerCase() + '-1') as Pool
+          const [vault1UnderlyingAmount, vault1UnderlyingUsd] = await getVaultUnderlyingAmount(vault1, ctx.chainId, tvl[0], event.blockNumber)
+
+          const vault1UserFrom = await ctx.store.get(VaultUser, event.args.from.toLowerCase() + '-' + event.address.toLowerCase() + '-1') as VaultUser
+          let vault1UserTo = await ctx.store.get(VaultUser, event.args.to.toLowerCase() + '-' + event.address.toLowerCase() + '-1')
+          if (!vault1UserTo) {
+            vault1UserTo = new VaultUser({
+              id: event.args.to.toLowerCase() + '-' + event.address.toLowerCase() + '-1',
+              vault: event.address,
+              account: event.args.to,
+              earned: BigDecimal(0),
+              earnedSnapshot: BigDecimal(0),
+              underlying_token_amount: BigDecimal(0),
+              underlying_token_amount_usd: BigDecimal(0),
+              underlying_token_index: 1,
+            })
+          }
+          vault1UserFrom.underlying_token_amount = userBalanceFrom.times(vault1UnderlyingAmount).div(totalSupply)
+          vault1UserFrom.underlying_token_amount_usd = userBalanceFrom.times(vault1UnderlyingUsd).div(totalSupply)
+          vault1UserTo.underlying_token_amount = userBalanceTo.times(vault1UnderlyingAmount).div(totalSupply)
+          vault1UserTo.underlying_token_amount_usd = userBalanceTo.times(vault1UnderlyingUsd).div(totalSupply)
+          await ctx.store.upsert(vault1UserFrom)
+          await ctx.store.upsert(vault1UserTo)
+
+          const vault0Prop = vault0UnderlyingUsd.div(vault0UnderlyingUsd.plus(vault1UnderlyingUsd))
+          ctx.eventLogger.emit('misc_events', {
+            timestamp: Math.floor(ctx.timestamp.getTime() / 1000),
+            chain_id: ctx.chainId,
+            block_number: event.blockNumber,
+            log_index: event.index,
+            transaction_hash: event.transactionHash,
+            user_address: event.args.from,
+            taker_address: event.args.to,
+            pool_address: vault0.pool_address,
+            underlying_token_address: vault0.underlying_token_address,
+            amount: transferAmount.times(vault0Prop),
+            amount_usd: transferAmount.times(scaleDown(tvl[0], 18)).div(totalSupply).times(vault0Prop),
+            event_type: 'transfer',
+          })
+          ctx.eventLogger.emit('misc_events', {
+            timestamp: Math.floor(ctx.timestamp.getTime() / 1000),
+            chain_id: ctx.chainId,
+            block_number: event.blockNumber,
+            log_index: event.index,
+            transaction_hash: event.transactionHash,
+            user_address: event.args.from,
+            taker_address: event.args.to,
+            pool_address: vault1.pool_address,
+            underlying_token_address: vault1.underlying_token_address,
+            amount: transferAmount.times(BigDecimal('1', 18).minus(vault0Prop)),
+            amount_usd: transferAmount.times(scaleDown(tvl[0], 18)).div(totalSupply).times(BigDecimal('1', 18).minus(vault0Prop)),
+            event_type: 'transfer',
+          })
+        } else {
+          ctx.eventLogger.emit('misc_events', {
+            timestamp: Math.floor(ctx.timestamp.getTime() / 1000),
+            chain_id: ctx.chainId,
+            block_number: event.blockNumber,
+            log_index: event.index,
+            transaction_hash: event.transactionHash,
+            user_address: event.args.from,
+            taker_address: event.args.to,
+            pool_address: vault0.pool_address,
+            underlying_token_address: vault0.underlying_token_address,
+            amount: transferAmount,
+            amount_usd: transferAmount.times(scaleDown(tvl[0], 18)).div(totalSupply),
+            event_type: 'transfer',
+          })
+        }
       }
+
     }
 
   })
