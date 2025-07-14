@@ -151,9 +151,11 @@ const vaultTemplate = new VaultProcessorTemplate()
     const vault0UserUnderlyingTokenAmountUsd = userBalance.times(vault0UnderlyingUsd).div(totalSupply)
 
     const vault0User = await ctx.store.get(VaultUser, event.args.owner.toLowerCase() + '-' + event.address.toLowerCase() + '-0') as VaultUser
-    vault0User.underlying_token_amount = vault0UserUnderlyingTokenAmount
-    vault0User.underlying_token_amount_usd = vault0UserUnderlyingTokenAmountUsd
-    await ctx.store.upsert(vault0User)
+    if (vault0User) {
+      vault0User.underlying_token_amount = vault0UserUnderlyingTokenAmount
+      vault0User.underlying_token_amount_usd = vault0UserUnderlyingTokenAmountUsd
+      await ctx.store.upsert(vault0User)
+    }
 
     if (vault0.underlying_type === UnderlyingType.VIRTUAL_EACH_ASSET) {
       const vault1 = await ctx.store.get(Pool, event.address.toLowerCase() + '-1') as Pool
@@ -162,9 +164,11 @@ const vaultTemplate = new VaultProcessorTemplate()
       const vault1UserUnderlyingTokenAmountUsd = userBalance.times(vault1UnderlyingUsd).div(totalSupply)
 
       const vault1User = await ctx.store.get(VaultUser, event.args.owner.toLowerCase() + '-' + event.address.toLowerCase() + '-1') as VaultUser
-      vault1User.underlying_token_amount = vault1UserUnderlyingTokenAmount
-      vault1User.underlying_token_amount_usd = vault1UserUnderlyingTokenAmountUsd
-      await ctx.store.upsert(vault1User)
+      if (vault1User) {
+        vault1User.underlying_token_amount = vault1UserUnderlyingTokenAmount
+        vault1User.underlying_token_amount_usd = vault1UserUnderlyingTokenAmountUsd
+        await ctx.store.upsert(vault1User)
+      }
 
       const vault0Prop = vault0UnderlyingUsd.div(vault0UnderlyingUsd.plus(vault1UnderlyingUsd))
 
