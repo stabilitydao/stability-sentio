@@ -7,6 +7,11 @@ enum UnderlyingType {
     VIRTUAL_EACH_ASSET
 }
 
+enum UnitType {
+    Core
+    Lending
+}
+
 
 # Output column headers must match the following : chain_id, timestamp, creation_block_number, underlying_token_address, underlying_token_index, underlying_token_symbol, underlying_token_decimals, receipt_token_address, receipt_token_symbol, receipt_token_decimals, pool_address, pool_symbol
 
@@ -55,4 +60,23 @@ type VaultUser @entity {
     underlying_token_amount_usd: BigDecimal!
     earned: BigDecimal!
     earnedSnapshot: BigDecimal!
+}
+
+type Revenue @entity {
+    "{epoch_week}"
+    id: ID!
+
+    valueUsd: BigDecimal!
+    price: BigDecimal!
+    value: BigDecimal!
+}
+
+type RevenueUnit @entity {
+    "{epoch_week}-}"
+    id: ID!
+
+    unit: String!
+    valueUsd: BigDecimal!
+    price: BigDecimal!
+    value: BigDecimal!
 }
