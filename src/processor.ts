@@ -1,6 +1,11 @@
-import {FactoryProcessor, StrategyProcessorTemplate, VaultProcessorTemplate} from "./types/eth/index.js";
+import {
+  FactoryProcessor,
+  RevenueRouterProcessor,
+  StrategyProcessorTemplate,
+  VaultProcessorTemplate,
+} from './types/eth/index.js';
 import {Vault} from "./types/eth/internal/index.js";
-import {Pool, Strategy, UnderlyingType, VaultUser} from "./schema/store.js";
+import { Pool, Strategy, UnderlyingType, VaultUser, Revenue, RevenueUnit, UnitType } from './schema/store.js';
 import {getStrategyContract} from "./types/eth/internal/strategy-processor.js";
 import {getVaultContract, VaultBoundContractView} from "./types/eth/internal/vault-processor.js";
 import {BlockParams} from 'ethers/providers'
@@ -8,10 +13,13 @@ import {BigDecimal, scaleDown} from "@sentio/sdk";
 import {ContractContext, EthChainId} from "@sentio/sdk/eth";
 import {token} from "@sentio/sdk/utils";
 import {getPriceReaderContract} from "./types/eth/internal/pricereader-processor.js";
+import { getPrice } from '@sentio/sdk/sui/ext';
 
 const deployments: {[chainId in EthChainId]?: {
   factory: string,
   priceReader: string,
+  revenueRouter: string,
+  stability: string,
 }} = {
   /*[EthChainId.POLYGON]: {
     factory: "0xa14EaAE76890595B3C7ea308dAEBB93863480EAD",
@@ -20,6 +28,8 @@ const deployments: {[chainId in EthChainId]?: {
   [EthChainId.SONIC_MAINNET]: {
     factory: "0xc184a3ecca684f2621c903a7943d85fa42f56671",
     priceReader: "0x422025182dd83a610bfa8b20550dcccdf94dc549",
+    revenueRouter: "0x23b8cc22c4c82545f4b451b11e2f17747a730810",
+    stability: "0x78a76316f66224cbaca6e70acb24d5ee5b2bd2c7",
   },
 }
 
@@ -555,6 +565,15 @@ async function getVaultUnderlyingAmount(pool: Pool, chainId: EthChainId, vaultTv
   return [underlyingAmount, underlyingAmount.times(uPrice)]
 }
 
+async function getPriceByToken(token: string, chainId: EthChainId, blockNumber: number, decimal: number = 18): Promise<BigDecimal> {
+  const priceReaderContract = getPriceReaderContract(chainId, (deployments[chainId] as {
+    factory: string,
+    priceReader: string,
+  }).priceReader)
+  const priceReaderPrice = await priceReaderContract.getPrice(token, {blockTag: blockNumber,})
+  return scaleDown(priceReaderPrice[0], decimal)
+}
+
 for (const chain in deployments) {
   FactoryProcessor
     .bind({
@@ -655,4 +674,48 @@ for (const chain in deployments) {
 
     })
 
+  RevenueRouterProcessor.bind({
+    address: deployments[chain as EthChainId]?.revenueRouter as string,
+    network: chain as EthChainId,
+  })
+    .onEventUnitEpochRevenue(async (event, ctx) => {
+      const epochWeek = event.args.periodEnded.toString();
+      const unitName = event.args.unitName;
+      let stblRevenue = scaleDown(event.args.stblRevenue, 18);
+
+      // for core unit 50% send to fee treasury
+      if (unitName === UnitType.Core) {
+        stblRevenue = stblRevenue.times(BigDecimal(2));
+      }
+
+      const stblPrice = await getPriceByToken(deployments[ctx.chainId]?.stability as string, ctx.chainId, ctx.blockNumber);
+      let revenue = await ctx.store.get(Revenue, epochWeek);
+      if (!revenue) {
+        revenue = new Revenue(epochWeek);
+        revenue.value = BigDecimal(0);
+        revenue.valueUsd = BigDecimal(0);
+        revenue.price = BigDecimal(0);
+      }
+
+      revenue.value = revenue.value.plus(stblRevenue);
+      revenue.valueUsd = revenue.value.times(stblPrice);
+      revenue.price = stblPrice;
+
+      await ctx.store.upsert(revenue);
+
+      let revenueUnit = await ctx.store.get(RevenueUnit, epochWeek + "-" + unitName);
+      if (!revenueUnit) {
+        revenueUnit = new RevenueUnit(epochWeek + "-" + event.args.unitName);
+        revenueUnit.unit = event.args.unitName;
+        revenueUnit.value = BigDecimal(0);
+        revenueUnit.valueUsd = BigDecimal(0);
+        revenueUnit.price = BigDecimal(0);
+      }
+
+      revenueUnit.value = revenueUnit.value.plus(stblRevenue);
+      revenueUnit.valueUsd = revenueUnit.value.times(stblPrice);
+      revenueUnit.price = stblPrice;
+
+      await ctx.store.upsert(revenueUnit);
+    })
 }

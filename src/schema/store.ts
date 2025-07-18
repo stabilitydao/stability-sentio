@@ -10,6 +10,9 @@ import { DatabaseSchema } from '@sentio/sdk'
 export enum UnderlyingType {
   NATIVE = "NATIVE", VIRTUAL_SINGLE = "VIRTUAL_SINGLE", VIRTUAL_EACH_ASSET = "VIRTUAL_EACH_ASSET"
 }
+export enum UnitType {
+  Core = "Core", Lending = "Lending"
+}
 
 
 
@@ -137,6 +140,52 @@ export class VaultUser extends AbstractEntity  {
   constructor(data: Partial<VaultUser>) {super()}
 }
 
+@Entity("Revenue")
+export class Revenue extends AbstractEntity  {
+
+	@Required
+	@Column("ID")
+	id: ID
+
+	@Required
+	@Column("BigDecimal")
+	valueUsd: BigDecimal
+
+	@Required
+	@Column("BigDecimal")
+	price: BigDecimal
+
+	@Required
+	@Column("BigDecimal")
+	value: BigDecimal
+  constructor(data: Partial<Revenue>) {super()}
+}
+
+@Entity("RevenueUnit")
+export class RevenueUnit extends AbstractEntity  {
+
+	@Required
+	@Column("ID")
+	id: ID
+
+	@Required
+	@Column("String")
+	unit: String
+
+	@Required
+	@Column("BigDecimal")
+	valueUsd: BigDecimal
+
+	@Required
+	@Column("BigDecimal")
+	price: BigDecimal
+
+	@Required
+	@Column("BigDecimal")
+	value: BigDecimal
+  constructor(data: Partial<RevenueUnit>) {super()}
+}
+
 
 const source = `enum UnderlyingType {
     # real underlying that strategy use (LP token, ALM token, asset)
@@ -145,6 +194,11 @@ const source = `enum UnderlyingType {
     VIRTUAL_SINGLE
     # the first of final strategy assets we use as underlying here
     VIRTUAL_EACH_ASSET
+}
+
+enum UnitType {
+    Core
+    Lending
 }
 
 
@@ -196,12 +250,32 @@ type VaultUser @entity {
     earned: BigDecimal!
     earnedSnapshot: BigDecimal!
 }
-`
+
+type Revenue @entity {
+    "{epoch_week}"
+    id: ID!
+
+    valueUsd: BigDecimal!
+    price: BigDecimal!
+    value: BigDecimal!
+}
+
+type RevenueUnit @entity {
+    "{epoch_week}-}"
+    id: ID!
+
+    unit: String!
+    valueUsd: BigDecimal!
+    price: BigDecimal!
+    value: BigDecimal!
+}`
 DatabaseSchema.register({
   source,
   entities: {
     "Pool": Pool,
 		"Strategy": Strategy,
-		"VaultUser": VaultUser
+		"VaultUser": VaultUser,
+		"Revenue": Revenue,
+		"RevenueUnit": RevenueUnit
   }
 })
