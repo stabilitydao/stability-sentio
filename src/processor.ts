@@ -342,18 +342,44 @@ const vaultTemplate = new VaultProcessorTemplate()
 const strategyTemplate = new StrategyProcessorTemplate()
   .onEventHardWork(async (event, ctx) => {
 
+    const blockNumber = event.blockNumber;
     const strategy = await ctx.store.get(Strategy, event.address) as Strategy
     const tvl = await getVaultContract(ctx.chainId, strategy.vault).tvl({blockTag: event.blockNumber,})
 
     const vault0 = await ctx.store.get(Pool, strategy.vault.toLowerCase() + '-0') as Pool
     const [vault0UnderlyingAmount, vault0UnderlyingUsd] = await getVaultUnderlyingAmount(vault0, ctx.chainId, tvl[0], event.blockNumber)
-    let vault0Earned: BigDecimal
+    let vault0Earned: BigDecimal = new BigDecimal(0);
     if (vault0.underlying_type === UnderlyingType.VIRTUAL_EACH_ASSET) {
       const vault1 = await ctx.store.get(Pool, strategy.vault.toLowerCase() + '-1') as Pool
       const [vault1UnderlyingAmount, vault1UnderlyingUsd] = await getVaultUnderlyingAmount(vault1, ctx.chainId, tvl[0], event.blockNumber)
       const vault0Prop = vault0UnderlyingUsd.div(vault0UnderlyingUsd.plus(vault1UnderlyingUsd))
-      vault0Earned = scaleDown(event.args.earned, 18).times(vault0Prop)
-      const vault1Earned = scaleDown(event.args.earned, 18).times(BigDecimal('1', 18).minus(vault0Prop))
+      let vault1Earned: BigDecimal = new BigDecimal(0);
+      if (event.args.earned > 0n) {
+        vault0Earned = scaleDown(event.args.earned, 18).times(vault0Prop)
+        vault1Earned = scaleDown(event.args.earned, 18).times(BigDecimal('1', 18).minus(vault0Prop));
+      } else {
+        const lastHardWork = await ctx.contract.lastHardWork({blockTag: blockNumber - 10,});
+        const [assetAddresses, assetsAmounts] = await ctx.contract.assetsAmounts({blockTag: blockNumber,})
+
+        const duration = Math.floor(ctx.timestamp.getTime() / 1000) - Number(lastHardWork);
+        const secondsInYear = 31536000;
+        if (duration > 0 && assetsAmounts.length > 0) {
+          const asset = assetAddresses.length > 0 ? assetAddresses[0] : vault0.underlying_token_address;
+          const assetDecimals = assetAddresses.length > 0 ? (await token.getERC20TokenInfo(ctx, asset)).decimal : vault0.underlying_token_decimals;
+          const price = await getPriceByAsset(asset, ctx.chainId, blockNumber);
+          const virtualRevenue = scaleDown(assetsAmounts[0], assetDecimals)
+            .times(new BigDecimal(duration / secondsInYear / 30));
+          vault0Earned = virtualRevenue.times(price).times(vault0Prop);
+          vault1Earned = virtualRevenue.times(price).times(BigDecimal('1', 18).minus(vault0Prop));
+          ctx.eventLogger.emit('Virtual_revenue', {
+            distinctId: event.transactionHash,
+            message: `Calculate virtual revenue`,
+            price: price,
+            virtualRevenue: virtualRevenue,
+            vault0Earned: vault0Earned
+          });
+        }
+      }
 
       vault1.earned = vault1.earned.plus(vault1Earned)
       await ctx.store.upsert(vault1)
@@ -372,7 +398,29 @@ const strategyTemplate = new StrategyProcessorTemplate()
         await ctx.store.upsert(vaultUser)
       }
     } else {
-      vault0Earned = scaleDown(event.args.earned, 18)
+      if (event.args.earned > 0n) {
+        vault0Earned = scaleDown(event.args.earned, 18)
+      } else {
+        const lastHardWork = await ctx.contract.lastHardWork({blockTag: blockNumber - 10,});
+        const [assetAddresses, assetsAmounts] = await ctx.contract.assetsAmounts({blockTag: blockNumber,})
+
+        const duration = Math.floor(ctx.timestamp.getTime() / 1000) - Number(lastHardWork);
+        const secondsInYear = 31536000;
+        if (duration > 0 && assetsAmounts.length > 0) {
+          const asset = assetAddresses.length > 0 ? assetAddresses[0] : vault0.underlying_token_address;
+          const assetDecimals = assetAddresses.length > 0 ? (await token.getERC20TokenInfo(ctx, asset)).decimal : vault0.underlying_token_decimals;
+          const price = await getPriceByAsset(asset, ctx.chainId, blockNumber);
+          const virtualRevenue = scaleDown(assetsAmounts[0], assetDecimals).times(new BigDecimal(duration / secondsInYear / 30));
+          vault0Earned = virtualRevenue.times(price);
+          ctx.eventLogger.emit('virtual_revenue', {
+            distinctId: event.transactionHash,
+            message: `Calculate virtual revenue for single`,
+            price: price,
+            virtualRevenue: virtualRevenue,
+            vault0Earned: vault0Earned,
+          });
+        }
+      }
     }
 
     vault0.earned = vault0.earned.plus(vault0Earned)
@@ -553,6 +601,16 @@ async function getVaultUnderlyingAmount(pool: Pool, chainId: EthChainId, vaultTv
   const priceReaderPrice = await priceReaderContract.getPrice(pool.underlying_token_address, {blockTag: blockNumber,})
   const uPrice = scaleDown(priceReaderPrice[0], 18)
   return [underlyingAmount, underlyingAmount.times(uPrice)]
+}
+
+async function getPriceByAsset(asset: string, chainId: EthChainId, blockNumber: number): Promise<BigDecimal> {
+  const priceReaderContract = getPriceReaderContract(chainId, (deployments[chainId] as {
+    factory: string,
+    priceReader: string,
+  }).priceReader)
+
+  const priceReaderPrice = await priceReaderContract.getPrice(asset, {blockTag: blockNumber,})
+  return scaleDown(priceReaderPrice[0], 18)
 }
 
 for (const chain in deployments) {
